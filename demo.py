@@ -39,19 +39,19 @@ def load_checkpoints(config_path, checkpoint_path, cpu=False):
         checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
     else:
         checkpoint = torch.load(checkpoint_path,map_location="cuda:0")
-        
+
     ckp_generator = OrderedDict((k.replace('module.',''),v) for k,v in checkpoint['generator'].items())
     generator.load_state_dict(ckp_generator)
     ckp_kp_detector = OrderedDict((k.replace('module.',''),v) for k,v in checkpoint['kp_detector'].items())
     kp_detector.load_state_dict(ckp_kp_detector)
-    
+
     if not cpu:
         generator = DataParallelWithCallback(generator)
         kp_detector = DataParallelWithCallback(kp_detector)
 
     generator.eval()
     kp_detector.eval()
-    
+
     return generator, kp_detector
 
 
@@ -73,9 +73,9 @@ def make_animation(source_image, driving_video, generator, kp_detector, relative
         depth_driving = outputs[("disp", 0)]
         source_kp = torch.cat((source,depth_source),1)
         driving_kp = torch.cat((driving[:, :, 0],depth_driving),1)
-       
+
         kp_source = kp_detector(source_kp)
-        kp_driving_initial = kp_detector(driving_kp) 
+        kp_driving_initial = kp_detector(driving_kp)
 
         # kp_source = kp_detector(source)
         # kp_driving_initial = kp_detector(driving[:, :, 0])
@@ -139,21 +139,21 @@ if __name__ == "__main__":
     parser.add_argument("--source_image", default='sup-mat/source.png', help="path to source image")
     parser.add_argument("--driving_video", default='sup-mat/source.png', help="path to driving video")
     parser.add_argument("--result_video", default='result.mp4', help="path to output")
-    
+
     parser.add_argument("--relative", dest="relative", action="store_true", help="use relative or absolute keypoint coordinates")
     parser.add_argument("--adapt_scale", dest="adapt_scale", action="store_true", help="adapt movement scale based on convex hull of keypoints")
     parser.add_argument("--generator", type=str, required=True)
     parser.add_argument("--kp_num", type=int, required=True)
 
 
-    parser.add_argument("--find_best_frame", dest="find_best_frame", action="store_true", 
+    parser.add_argument("--find_best_frame", dest="find_best_frame", action="store_true",
                         help="Generate from the frame that is the most alligned with source. (Only for faces, requires face_aligment lib)")
 
-    parser.add_argument("--best_frame", dest="best_frame", type=int, default=None,  
+    parser.add_argument("--best_frame", dest="best_frame", type=int, default=None,
                         help="Set frame to start from.")
- 
+
     parser.add_argument("--cpu", dest="cpu", action="store_true", help="cpu mode.")
- 
+
 
     parser.set_defaults(relative=False)
     parser.set_defaults(adapt_scale=False)
@@ -203,17 +203,18 @@ if __name__ == "__main__":
     else:
         # predictions = make_animation(source_image, driving_video, generator, kp_detector, relative=opt.relative, adapt_movement_scale=opt.adapt_scale, cpu=opt.cpu)
         sources, drivings, predictions,depth_gray = make_animation(source_image, driving_video, generator, kp_detector, relative=opt.relative, adapt_movement_scale=opt.adapt_scale, cpu=opt.cpu)
-    imageio.mimsave('demo.mp4', [img_as_ubyte(p) for p in predictions], fps=fps)
-    imageio.mimsave(opt.result_video, [np.concatenate((img_as_ubyte(s),img_as_ubyte(d),img_as_ubyte(p)),1) for (s,d,p) in zip(sources, drivings, predictions)], fps=fps)
-    imageio.mimsave("gray.mp4", depth_gray, fps=fps)
-    # merge the gray video
-    animation = np.array(imageio.mimread(opt.result_video,memtest=False))
-    gray = np.array(imageio.mimread("gray.mp4",memtest=False))
+    # imageio.mimsave('demo.mp4', [img_as_ubyte(p) for p in predictions], fps=fps)
+    # imageio.mimsave(opt.result_video, [np.concatenate((img_as_ubyte(s),img_as_ubyte(d),img_as_ubyte(p)),1) for (s,d,p) in zip(sources, drivings, predictions)], fps=fps)
+    # imageio.mimsave("gray.mp4", depth_gray, fps=fps)
+    # # merge the gray video
+    # animation = np.array(imageio.mimread(opt.result_video,memtest=False))
+    # gray = np.array(imageio.mimread("gray.mp4",memtest=False))
 
-    src_dst = animation[:,:,:512,:]
-    animate = animation[:,:,512:,:]
-    merge = np.concatenate((src_dst,gray,animate),2)
-    imageio.mimsave(opt.result_video, merge, fps=fps)
+    # src_dst = animation[:,:,:512,:]
+    # animate = animation[:,:,512:,:]
+    # merge = np.concatenate((src_dst,gray,animate),2)
+    # imageio.mimsave(opt.result_video, merge, fps=fps)
+    imageio.mimsave(opt.result_video, [img_as_ubyte(p) for p in predictions], fps=fps)
     #Transfer to gif
     # from moviepy.editor import *
     # clip = (VideoFileClip(opt.result_video))
