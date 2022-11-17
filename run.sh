@@ -32,7 +32,7 @@ run()
         --relative --adapt_scale --kp_num 15 \
         --generator SPADEDepthAwareGenerator \
         --find_best_frame \
-        --result_video $1_$(date +%s).mp4
+        --result_video $1_dagan_$(date +%s).mp4
 }
 if [[ -z "$inputfile1" ]]; then
     echo run this script with run.sh image.png video.mp4

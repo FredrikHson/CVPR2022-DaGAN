@@ -214,7 +214,7 @@ if __name__ == "__main__":
     # animate = animation[:,:,512:,:]
     # merge = np.concatenate((src_dst,gray,animate),2)
     # imageio.mimsave(opt.result_video, merge, fps=fps)
-    imageio.mimsave(opt.result_video, [img_as_ubyte(p) for p in predictions], fps=fps)
+    imageio.mimsave(opt.result_video, [img_as_ubyte(p) for p in predictions], fps=fps, quality=10)
     #Transfer to gif
     # from moviepy.editor import *
     # clip = (VideoFileClip(opt.result_video))
